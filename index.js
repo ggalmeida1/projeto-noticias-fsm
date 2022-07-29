@@ -3,9 +3,11 @@ const app = express()
 const path = require('path')
 const port = process.env.PORT || 3000
 const mongoose = require('mongoose')
-const User = require('./models/user')
-
 mongoose.Promise = global.Promise
+
+const User = require('./models/user')
+const noticias = require('./routes/noticias')
+const restrito = require('./routes/restrito')
 
 const mongo =  process.env.MONGODB || 'mongodb://localhost/noticias'
 
@@ -15,11 +17,21 @@ app.set('view engine', 'ejs')
 
 app.use(express.static('public'))
 
+app.use('/restrito', (req, res, next) => {
+    if('user' in req.session){
+        next()
+    }
+    res.send('Precisa logar')
+})
+
+app.use('/noticias', noticias)
+app.use('/restrito', restrito)
+
 const createInitialUser = async () => {
     const total = await User.count({ username: 'daniella' })
     if(total === 0) {
         const user = new User({
-            username: 'daniella',
+            username: 'neil',
             password: 'abc123'
         }) 
         await user.save()
